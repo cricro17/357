@@ -125,6 +125,16 @@ socket.on('cardDiscarded', (cards) => {
   updateButtons();
 });
 
+socket.on('cardDiscardedByOther', ({ playerId, cards }) => {
+  const area = document.getElementById('discardedArea');
+  const div = document.createElement('div');
+
+  div.className = 'discard-msg';
+  div.innerText = `Giocatore ${playerId.slice(0, 4)} ha scartato: ` + cards.map(c => `${c.value}${c.suit}`).join(', ');
+  area.appendChild(div);
+});
+
+
 socket.on('canAutoDiscard', (card) => {
   isMyTurn = true;
   currentPhase = 'discard';
@@ -167,3 +177,11 @@ socket.on('gameEnded', ({ winner, reason }) => {
   document.getElementById('status').innerText = msg;
   document.getElementById('actions').style.display = 'none';
 });
+
+function addToDiscardArea(card) {
+  const area = document.getElementById('discardedArea');
+  const div = document.createElement('div');
+  div.className = 'discarded-card';
+  div.textContent = `${card.value}${card.suit}`;
+  area.appendChild(div);
+}
