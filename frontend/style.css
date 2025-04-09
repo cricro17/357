@@ -1,145 +1,157 @@
-/* Poker-themed elegant dark style */
+/* === PALETTE ELEGANTE STILE TAVOLO DA POKER === */
 body {
-  margin: 0;
   font-family: 'Segoe UI', sans-serif;
-  background-color: #1b1f23;
-  color: #f5f5f5;
-}
-
-header {
+  background-color: #1b1b1b;
+  color: #f0f0f0;
+  margin: 0;
+  padding: 0;
   text-align: center;
-  padding: 20px 0;
-  background-color: #2e7d32;
-  color: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
 h1 {
-  margin-bottom: 10px;
-}
-
-.lobby-controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  color: gold;
+  font-size: 36px;
+  margin: 20px 0;
+  text-shadow: 1px 1px 4px black;
 }
 
 input, select, button {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
   font-size: 16px;
-}
-
-button {
-  background-color: #388e3c;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 8px;
+  border: none;
+  background-color: #333;
   color: white;
-  cursor: pointer;
-  transition: background-color 0.2s;
+  box-shadow: 1px 1px 3px black;
 }
 
 button:hover {
-  background-color: #2e7d32;
+  background-color: #555;
+  cursor: pointer;
 }
 
-main {
-  display: flex;
-  justify-content: center;
-  margin-top: 30px;
-}
-
-.table {
-  position: relative;
-  width: 600px;
-  height: 600px;
-  background-color: #355e3b;
-  border: 10px solid #1b5e20;
-  border-radius: 50%;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
-}
-
-.player {
-  position: absolute;
-  width: 140px;
-  text-align: center;
-}
-
-.player .name {
-  margin-bottom: 5px;
+#status {
+  margin: 10px;
   font-weight: bold;
-  color: #ffeb3b;
+  color: #fff;
 }
 
-.player.top {
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.player.bottom {
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.player.left {
-  top: 50%;
-  left: 20px;
-  transform: translateY(-50%);
-}
-
-.player.right {
-  top: 50%;
-  right: 20px;
-  transform: translateY(-50%);
-}
-
-.hand {
+.game-board {
   display: flex;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.card {
-  width: 40px;
-  height: 60px;
-  border-radius: 6px;
-  background: white;
-  border: 2px solid #444;
-  color: black;
-  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 30px;
+}
+
+.player-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.middle {
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+}
+
+.player-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 150px;
+}
+
+.player-name {
+  color: gold;
   font-weight: bold;
-  font-size: 20px;
-}
-
-.other-hand .card {
-  background: url('back-of-card.png') no-repeat center center;
-  background-size: cover;
-  color: transparent;
-  border: none;
-}
-
-.actions button {
-  margin: 10px 5px 0;
-  font-size: 16px;
-  background-color: #f57c00;
-  color: white;
-}
-
-.actions button:hover {
-  background-color: #ef6c00;
+  margin-bottom: 5px;
 }
 
 .discard-area {
-  margin-top: 5px;
-  border: 1px dashed #fff;
-  min-height: 30px;
-  padding: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  color: #fff;
+  border: 2px dashed #777;
+  background-color: #2e2e2e;
+  padding: 10px;
+  width: 100px;
+  min-height: 50px;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+}
+
+.center-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.draw-pile, .discard-pile {
+  background-color: #004d00;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  border: 2px solid gold;
+  width: 120px;
+  text-align: center;
+}
+
+#handArea {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.card {
+  background-color: white;
+  color: black;
+  border-radius: 8px;
+  border: 2px solid #333;
+  font-size: 22px;
+  font-weight: bold;
+  width: 50px;
+  height: 70px;
+  margin: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+}
+
+.card.selected {
+  background-color: orange;
+  border-color: red;
+}
+
+.card.♥, .card.♦ {
+  color: red;
+}
+
+.card.♠, .card.♣ {
+  color: black;
+}
+
+.controls {
+  margin-top: 20px;
+}
+
+.scoreboard {
+  background-color: #2a2a2a;
+  color: gold;
+  padding: 15px;
+  border: 2px solid #555;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.score-header {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 5px;
 }
