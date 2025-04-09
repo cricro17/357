@@ -553,7 +553,11 @@
         return;
       }
       console.log("Creazione partita con nome:", playerName);
-      socket.emit('createGame', playerName);
+      if (socket) {
+        socket.emit('createGame', playerName);
+      } else {
+        showNotification('Errore di connessione. Ricarica la pagina.');
+      }
     }
 
     function joinGame() {
@@ -564,12 +568,20 @@
         return;
       }
       console.log("Unione alla partita:", gameId, "con nome:", playerName);
-      socket.emit('joinGame', { gameId, playerName });
+      if (socket) {
+        socket.emit('joinGame', { gameId, playerName });
+      } else {
+        showNotification('Errore di connessione. Ricarica la pagina.');
+      }
     }
 
     function startGame() {
       console.log("Avvio partita");
-      socket.emit('startGame');
+      if (socket) {
+        socket.emit('startGame');
+      } else {
+        showNotification('Errore di connessione. Ricarica la pagina.');
+      }
     }
 
     function drawCard() {
@@ -578,7 +590,11 @@
         return;
       }
       console.log("Pesca carta");
-      socket.emit('drawCard');
+      if (socket) {
+        socket.emit('drawCard');
+      } else {
+        showNotification('Errore di connessione. Ricarica la pagina.');
+      }
     }
 
     function discardCard() {
@@ -593,7 +609,11 @@
       }
       const cardIndex = Array.from(selectedCard.parentElement.children).indexOf(selectedCard);
       console.log("Scarta carta all'indice:", cardIndex);
-      socket.emit('discardCard', cardIndex);
+      if (socket) {
+        socket.emit('discardCard', cardIndex);
+      } else {
+        showNotification('Errore di connessione. Ricarica la pagina.');
+      }
     }
 
     function kang() {
@@ -606,8 +626,12 @@
       const message = input.value.trim();
       if (message) {
         console.log("Invio messaggio chat:", message);
-        socket.emit('chatMessage', message);
-        input.value = '';
+        if (socket) {
+          socket.emit('chatMessage', message);
+          input.value = '';
+        } else {
+          showNotification('Errore di connessione. Ricarica la pagina.');
+        }
       }
     }
 
