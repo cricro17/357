@@ -26,27 +26,29 @@ document.getElementById('join').onclick = () => {
 function renderHand(highlightCard = null) {
   const handDiv = document.getElementById('hand');
   handDiv.innerHTML = '';
+
   playerHand.forEach((card, index) => {
-    const btn = document.createElement('button');
-    btn.className = `card ${card.suit}`; // Aggiunge classe card e seme (♥ ♠ ♣ ♦)
-    btn.innerText = `${card.value}${card.suit}`;
-    btn.onclick = () => toggleCardSelection(index, btn);
+    const cardEl = document.createElement('div');
+    cardEl.className = `card ${card.suit}`; // Aggiunge stile carta e colore seme
+    cardEl.innerText = `${card.value}${card.suit}`;
+    cardEl.onclick = () => toggleCardSelection(index, cardEl);
 
-    // Evidenzia se selezionata
+    // ✅ Evidenziazione per selezione manuale
     if (selectedIndexes.includes(index)) {
-      btn.style.backgroundColor = 'orange';
+      cardEl.style.backgroundColor = 'orange';
     }
 
-    // Evidenzia per scarto immediato
-    if (highlightCard && card.value === highlightCard.value) {
-      btn.style.border = '3px solid red';
-      btn.style.backgroundColor = '#ffdada';
-      selectedIndexes = [index];
+    // ✅ Evidenziazione per scarto automatico suggerito
+    if (highlightCard && card.value === highlightCard.value && card.suit === highlightCard.suit) {
+      cardEl.style.border = '3px solid red';
+      cardEl.style.backgroundColor = '#ffdada';
+      selectedIndexes = [index]; // seleziona automaticamente
     }
 
-    handDiv.appendChild(btn);
+    handDiv.appendChild(cardEl);
   });
 }
+
 
 function toggleCardSelection(index, button) {
   if (selectedIndexes.includes(index)) {
