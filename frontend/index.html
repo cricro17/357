@@ -19,23 +19,39 @@
 
   <p id="status"></p>
 
+  <!-- Layout da tavolo -->
+  <div class="table">
+    <div class="player top">
+      <div class="label">Giocatore 1</div>
+      <div class="discard-area" id="discard-top"></div>
+    </div>
+    <div class="player left">
+      <div class="label">Giocatore 2</div>
+      <div class="discard-area" id="discard-left"></div>
+    </div>
+    <div class="player right">
+      <div class="label">Giocatore 3</div>
+      <div class="discard-area" id="discard-right"></div>
+    </div>
+    <div class="player bottom">
+      <div class="label">Tu</div>
+      <div class="hand" id="handArea"></div>
+    </div>
+  </div>
+
   <hr>
 
-<h2>Le tue carte:</h2>
-<div id="hand" style="margin-bottom: 20px;"></div>
-<h3>Carte scartate dagli altri giocatori:</h3>
-<div id="discardedArea" style="margin-bottom: 20px;"></div>
+  <h2>Le tue carte:</h2>
+  <div id="hand" style="margin-bottom: 20px;"></div>
 
-<div id="actions" style="display: none;">
-  <button id="drawBtn">Pesca</button>
-  <button id="discardBtn">Scarta</button>
-  <button id="autoDiscardBtn" style="display: none;">Scarta Subito</button>
-  <button id="kangBtn">Kang</button>
-  
-</div>
+  <div id="actions" style="display: none;">
+    <button id="drawBtn">Pesca</button>
+    <button id="discardBtn">Scarta</button>
+    <button id="autoDiscardBtn" style="display: none;">Scarta Subito</button>
+    <button id="kangBtn">Kang</button>
+  </div>
 
-<p id="turnInfo"></p>
-
+  <p id="turnInfo"></p>
 
   <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
   <script src="app.js"></script>
