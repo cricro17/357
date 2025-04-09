@@ -68,7 +68,19 @@ io.on('connection', (socket) => {
 
     room.lastDiscarded = { value: cardList[0].value };
     io.to(socket.id).emit('cardDiscarded', cardList);
-
+    room.players.forEach((pid, index) => {
+      if (pid !== socket.id) {
+        const currentPlayerIndex = room.players.indexOf(socket.id);
+        io.to(pid).emit('cardDiscardedByOther', {
+          playerId: socket.id,
+          cards,
+          playerIndex: currentPlayerIndex,
+          localIndex: index
+        });
+      }
+    });
+    
+    
     room.turnIndex = (room.turnIndex + 1) % room.players.length;
     const next = getCurrentPlayer(room);
     const nextHand = room.hands[next];
