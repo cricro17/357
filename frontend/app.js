@@ -4,6 +4,12 @@ let playerHand = [];
 let selectedIndexes = [];
 let currentPhase = null;
 let isMyTurn = false;
+let localPlayerIndex = null;
+
+// Mapping dinamico dei giocatori in base al numero e alla posizione relativa
+const discardMap = ["bottom", "right", "top", "left"];
+
+// Eventi di creazione o join
 
 document.getElementById('create').onclick = () => {
   const maxPlayers = parseInt(document.getElementById('maxPlayers').value);
@@ -23,32 +29,44 @@ document.getElementById('join').onclick = () => {
   });
 };
 
+// Rende la mano dell'utente
 function renderHand(highlightCard = null) {
   const handDiv = document.getElementById('hand');
   handDiv.innerHTML = '';
 
   playerHand.forEach((card, index) => {
-    const cardEl = document.createElement('div');
-    cardEl.className = `card ${card.suit}`; // Aggiunge stile carta e colore seme
-    cardEl.innerText = `${card.value}${card.suit}`;
-    cardEl.onclick = () => toggleCardSelection(index, cardEl);
+    const btn = document.createElement('button');
+    btn.className = `card ${card.suit}`;
+    btn.innerText = `${card.value}${card.suit}`;
+    btn.onclick = () => toggleCardSelection(index, btn);
 
-    // ✅ Evidenziazione per selezione manuale
     if (selectedIndexes.includes(index)) {
-      cardEl.style.backgroundColor = 'orange';
+      btn.style.backgroundColor = 'orange';
     }
-
-    // ✅ Evidenziazione per scarto automatico suggerito
-    if (highlightCard && card.value === highlightCard.value && card.suit === highlightCard.suit) {
-      cardEl.style.border = '3px solid red';
-      cardEl.style.backgroundColor = '#ffdada';
-      selectedIndexes = [index]; // seleziona automaticamente
+    if (highlightCard && card.value === highlightCard.value) {
+      btn.style.border = '3px solid red';
+      btn.style.backgroundColor = '#ffdada';
+      selectedIndexes = [index];
     }
-
-    handDiv.appendChild(cardEl);
+    handDiv.appendChild(btn);
   });
 }
 
+// Rende carte coperte per gli altri giocatori
+function renderBacks(playerId, index, total) {
+  const relative = (index - localPlayerIndex + total) % total;
+  const positions = ['bottom', 'right', 'top', 'left'];
+  const pos = positions[relative];
+  const handDiv = document.getElementById(`${pos}-hand`);
+  if (!handDiv || playerId === socket.id) return;
+
+  handDiv.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const back = document.createElement('div');
+    back.className = 'card back';
+    handDiv.appendChild(back);
+  }
+}
 
 function toggleCardSelection(index, button) {
   if (selectedIndexes.includes(index)) {
@@ -92,9 +110,15 @@ document.getElementById('kangBtn').onclick = () => {
   socket.emit('kang');
 };
 
-socket.on('initialHand', ({ hand, special }) => {
+// Eventi dal server
+
+socket.on('initialHand', ({ hand, special, playerIndex, totalPlayers, allPlayers }) => {
   playerHand = hand;
   renderHand();
+  localPlayerIndex = playerIndex;
+
+  allPlayers.forEach((pid, i) => renderBacks(pid, i, totalPlayers));
+
   if (special) {
     document.getElementById('status').innerText = `✨ Hai una combinazione speciale: ${special.combination} (x${special.multiplier})`;
   }
@@ -110,8 +134,6 @@ socket.on('yourTurn', () => {
 });
 
 socket.on('cardDrawn', (card) => {
-  console.log('📥 Carta pescata dal server:', card);
-  // Aggiungi la carta alla tua mano
   playerHand.push(card);
   currentPhase = 'discard';
   renderHand();
@@ -128,24 +150,17 @@ socket.on('cardDiscarded', (cards) => {
   updateButtons();
 });
 
-socket.on('cardDiscardedByOther', ({ playerId, cards, playerIndex, localIndex }) => {
-  const relativeIndex = (playerIndex - localIndex + 4) % 4;
-  let areaId;
-
-  if (relativeIndex === 1) areaId = 'right-discard';
-  else if (relativeIndex === 2) areaId = 'top-discard';
-  else if (relativeIndex === 3) areaId = 'left-discard';
-  else return; // non mostrare se sono io
-
-  const area = document.getElementById(areaId);
+socket.on('cardDiscardedByOther', ({ playerIndex, cards }) => {
+  const relative = (playerIndex - localPlayerIndex + 4) % 4;
+  const position = discardMap[relative];
+  const area = document.getElementById(`discard-${position}`);
   if (!area) return;
 
   const div = document.createElement('div');
+  div.className = 'card';
   div.innerText = cards.map(c => `${c.value}${c.suit}`).join(' ');
   area.appendChild(div);
 });
-
-
 
 socket.on('canAutoDiscard', (card) => {
   isMyTurn = true;
@@ -189,11 +204,3 @@ socket.on('gameEnded', ({ winner, reason }) => {
   document.getElementById('status').innerText = msg;
   document.getElementById('actions').style.display = 'none';
 });
-
-function addToDiscardArea(card) {
-  const area = document.getElementById('discardedArea');
-  const div = document.createElement('div');
-  div.className = 'discarded-card';
-  div.textContent = `${card.value}${card.suit}`;
-  area.appendChild(div);
-}
