@@ -170,7 +170,6 @@ socket.on('cardDiscardedByOther', ({ playerIndex, cards }) => {
   }
 });
 
-
 socket.on('canAutoDiscard', (card) => {
   isMyTurn = true;
   currentPhase = 'discard';
