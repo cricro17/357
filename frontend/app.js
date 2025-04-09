@@ -107,6 +107,8 @@ socket.on('yourTurn', () => {
 });
 
 socket.on('cardDrawn', (card) => {
+  console.log('📥 Carta pescata dal server:', card);
+  // Aggiungi la carta alla tua mano
   playerHand.push(card);
   currentPhase = 'discard';
   renderHand();
