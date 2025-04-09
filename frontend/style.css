@@ -10,3 +10,32 @@ body {
     margin: 5px;
   }
   
+  #discardedArea {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    min-height: 40px;
+  }
+  
+  .discarded-card {
+    padding: 6px 10px;
+    border: 1px solid #999;
+    background-color: #eee;
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .discard-msg {
+    margin-bottom: 6px;
+    padding: 6px 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: monospace;
+  }
+  
