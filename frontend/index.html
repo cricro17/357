@@ -1,59 +1,209 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pai Kang Online</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://i.imgur.com/gNEC6dM.jpg') center/cover no-repeat;
+      color: white;
+      overflow: hidden;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2em;
+      margin: 10px 0;
+      color: white;
+      text-shadow: 2px 2px 5px black;
+    }
+
+    .table {
+      position: relative;
+      width: 800px;
+      height: 600px;
+      margin: 0 auto;
+      background: radial-gradient(ellipse at center, #1b5e20 0%, #0d3b13 100%);
+      border: 10px solid #3e2723;
+      border-radius: 50%;
+      box-shadow: 0 0 50px rgba(0,0,0,0.6);
+    }
+
+    .player {
+      position: absolute;
+      width: 160px;
+      text-align: center;
+    }
+
+    .player .name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .hand, .discard-pile {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 5px;
+      min-height: 40px;
+    }
+
+    .card {
+      width: 40px;
+      height: 60px;
+      border-radius: 6px;
+      background: white;
+      border: 2px solid black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .card.red {
+      color: red;
+    }
+
+    .card.back {
+      background: url('https://i.imgur.com/OiQeY3n.png') center/cover no-repeat;
+      border: none;
+    }
+
+    .discard-label {
+      font-size: 0.9em;
+      color: #ddd;
+      margin: 4px 0 2px;
+    }
+
+    /* Posizionamento giocatori */
+    .player.bottom {
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .player.top {
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .player.left {
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+    }
+
+    .player.right {
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+    }
+
+    /* Pulsanti */
+    .controls {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .controls button {
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      background: #ffcc80;
+      cursor: pointer;
+      margin: 0 5px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    }
+
+    .status {
+      text-align: center;
+      font-size: 1.1em;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
   <h1>Pai Kang Online 🎴</h1>
-  <button id="create">Crea partita</button>
-  <select id="maxPlayers">
-    <option value="3">3 giocatori</option>
-    <option value="4">4 giocatori</option>
-  </select>
-  
-  <input type="text" id="roomCode" placeholder="Codice stanza">
-  <button id="join">Entra nella partita</button>
 
-  <p id="status"></p>
+  <div class="status" id="status">In attesa dei giocatori...</div>
 
-  <!-- Layout da tavolo -->
   <div class="table">
+
+    <!-- Giocatore in alto -->
     <div class="player top">
-      <div class="label">Giocatore 1</div>
-      <div class="discard-area" id="discard-top"></div>
+      <div class="name">Giocatore 1</div>
+      <div class="hand" id="top-hand">
+        <div class="card back"></div>
+        <div class="card back"></div>
+        <div class="card back"></div>
+        <div class="card back"></div>
+        <div class="card back"></div>
+      </div>
+      <div class="discard-label">Scarti</div>
+      <div class="discard-pile" id="top-discard">
+        <!-- carte scartate -->
+      </div>
     </div>
+
+    <!-- Giocatore a sinistra -->
     <div class="player left">
-      <div class="label">Giocatore 2</div>
-      <div class="discard-area" id="discard-left"></div>
+      <div class="name">Giocatore 2</div>
+      <div class="hand" id="left-hand">
+        <div class="card back"></div>
+        <div class="card back"></div>
+        <div class="card back"></div>
+        <div class="card back"></div>
+        <div class="card back"></div>
+      </div>
+      <div class="discard-label">Scarti</div>
+      <div class="discard-pile" id="left-discard">
+        <!-- carte scartate -->
+      </div>
     </div>
+
+    <!-- Giocatore a destra -->
     <div class="player right">
-      <div class="label">Giocatore 3</div>
-      <div class="discard-area" id="discard-right"></div>
+      <div class="name">Giocatore 3</div>
+      <div class="hand" id="right-hand">
+        <div class="card back"></div>
+        <div class="card back"></div>
+        <div class="card back"></div>
+        <div class="card back"></div>
+        <div class="card back"></div>
+      </div>
+      <div class="discard-label">Scarti</div>
+      <div class="discard-pile" id="right-discard">
+        <!-- carte scartate -->
+      </div>
     </div>
+
+    <!-- Giocatore (tu) in basso -->
     <div class="player bottom">
-      <div class="label">Tu</div>
-      <div class="hand" id="handArea"></div>
+      <div class="name">Tu</div>
+      <div class="hand" id="bottom-hand">
+        <div class="card red">A♥</div>
+        <div class="card red">8♦</div>
+        <div class="card">9♣</div>
+        <div class="card">10♠</div>
+        <div class="card">2♣</div>
+      </div>
+      <div class="discard-label">Scarti</div>
+      <div class="discard-pile" id="bottom-discard">
+        <!-- carte scartate -->
+      </div>
     </div>
   </div>
 
-  <hr>
-
-  <h2>Le tue carte:</h2>
-  <div id="hand" style="margin-bottom: 20px;"></div>
-
-  <div id="actions" style="display: none;">
+  <div class="controls">
     <button id="drawBtn">Pesca</button>
     <button id="discardBtn">Scarta</button>
-    <button id="autoDiscardBtn" style="display: none;">Scarta Subito</button>
     <button id="kangBtn">Kang</button>
   </div>
-
-  <p id="turnInfo"></p>
-
-  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-  <script src="app.js"></script>
 </body>
 </html>
