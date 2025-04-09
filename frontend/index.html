@@ -22,7 +22,8 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: url('https://i.imgur.com/gNEC6dM.jpg') center/cover no-repeat fixed;
+      /* Sostituisco l'immagine di sfondo con un gradiente */
+      background: linear-gradient(135deg, #1a472a 0%, #0d3b13 100%);
       color: var(--text-color);
       min-height: 100vh;
       display: flex;
@@ -120,7 +121,8 @@
     }
 
     .card.back {
-      background: url('https://i.imgur.com/OiQeY3n.png') center/cover no-repeat;
+      background: #b71c1c;
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
       border: none;
     }
 
@@ -283,40 +285,6 @@
       }
     }
 
-    /* Responsive design */
-    @media (max-width: 1200px) {
-      .game-container {
-        flex-direction: column;
-      }
-
-      .game-info {
-        width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .table {
-        border-width: 5px;
-      }
-
-      .player {
-        width: 120px;
-      }
-
-      .card {
-        width: 30px;
-        height: 45px;
-        font-size: 14px;
-      }
-
-      .controls button {
-        padding: 8px 12px;
-        font-size: 14px;
-      }
-    }
-
     /* Lobby styles */
     .lobby {
       position: fixed;
@@ -371,6 +339,40 @@
     .hidden {
       display: none;
     }
+
+    /* Responsive design */
+    @media (max-width: 1200px) {
+      .game-container {
+        flex-direction: column;
+      }
+
+      .game-info {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .table {
+        border-width: 5px;
+      }
+
+      .player {
+        width: 120px;
+      }
+
+      .card {
+        width: 30px;
+        height: 45px;
+        font-size: 14px;
+      }
+
+      .controls button {
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -396,8 +398,8 @@
 
       <div class="table">
         <!-- Giocatore in alto -->
-        <div class="player top">
-          <div class="name">Giocatore 1</div>
+        <div class="player top" data-id="">
+          <div class="name">Giocatore in attesa</div>
           <div class="hand" id="top-hand">
             <div class="card back"></div>
             <div class="card back"></div>
@@ -410,8 +412,8 @@
         </div>
 
         <!-- Giocatore a sinistra -->
-        <div class="player left">
-          <div class="name">Giocatore 2</div>
+        <div class="player left" data-id="">
+          <div class="name">Giocatore in attesa</div>
           <div class="hand" id="left-hand">
             <div class="card back"></div>
             <div class="card back"></div>
@@ -424,8 +426,8 @@
         </div>
 
         <!-- Giocatore a destra -->
-        <div class="player right">
-          <div class="name">Giocatore 3</div>
+        <div class="player right" data-id="">
+          <div class="name">Giocatore in attesa</div>
           <div class="hand" id="right-hand">
             <div class="card back"></div>
             <div class="card back"></div>
@@ -438,7 +440,7 @@
         </div>
 
         <!-- Giocatore (tu) in basso -->
-        <div class="player bottom">
+        <div class="player bottom" data-id="">
           <div class="name">Tu</div>
           <div class="hand" id="bottom-hand">
             <div class="card red">A♥</div>
@@ -475,14 +477,25 @@
   <div class="notifications" id="notifications"></div>
 
   <script>
-    const socket = io();
+    // Inizializzazione Socket.IO con gestione degli errori
+    let socket;
+    try {
+      socket = io();
+      console.log("Socket.IO inizializzato");
+    } catch (error) {
+      console.error("Errore nell'inizializzazione di Socket.IO:", error);
+      showNotification("Errore di connessione al server. Ricarica la pagina.");
+    }
+
     let gameId = null;
     let playerName = null;
     let isHost = false;
     let currentTurn = null;
+    let players = [];
 
     // Funzioni di utilità
     function showNotification(message) {
+      console.log("Notifica:", message);
       const notifications = document.getElementById('notifications');
       const notification = document.createElement('div');
       notification.className = 'notification';
@@ -503,24 +516,31 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    function updatePlayerList(players) {
+    function updatePlayerList(playersList) {
+      console.log("Aggiornamento lista giocatori:", playersList);
+      players = playersList;
+      
       const playerElements = {
-        top: document.querySelector('.player.top .name'),
-        left: document.querySelector('.player.left .name'),
-        right: document.querySelector('.player.right .name'),
-        bottom: document.querySelector('.player.bottom .name')
+        top: document.querySelector('.player.top'),
+        left: document.querySelector('.player.left'),
+        right: document.querySelector('.player.right'),
+        bottom: document.querySelector('.player.bottom')
       };
 
       // Reset player names
       Object.values(playerElements).forEach(el => {
-        el.textContent = 'Giocatore in attesa';
+        if (el) {
+          el.querySelector('.name').textContent = 'Giocatore in attesa';
+          el.setAttribute('data-id', '');
+        }
       });
 
       // Update player names
-      players.forEach((player, index) => {
+      playersList.forEach((player, index) => {
         const position = ['top', 'left', 'right', 'bottom'][index];
         if (playerElements[position]) {
-          playerElements[position].textContent = player.name;
+          playerElements[position].querySelector('.name').textContent = player.name;
+          playerElements[position].setAttribute('data-id', player.id);
         }
       });
     }
@@ -532,6 +552,7 @@
         showNotification('Inserisci il tuo nome');
         return;
       }
+      console.log("Creazione partita con nome:", playerName);
       socket.emit('createGame', playerName);
     }
 
@@ -542,10 +563,12 @@
         showNotification('Inserisci nome e ID partita');
         return;
       }
+      console.log("Unione alla partita:", gameId, "con nome:", playerName);
       socket.emit('joinGame', { gameId, playerName });
     }
 
     function startGame() {
+      console.log("Avvio partita");
       socket.emit('startGame');
     }
 
@@ -554,6 +577,7 @@
         showNotification('Non è il tuo turno');
         return;
       }
+      console.log("Pesca carta");
       socket.emit('drawCard');
     }
 
@@ -568,6 +592,7 @@
         return;
       }
       const cardIndex = Array.from(selectedCard.parentElement.children).indexOf(selectedCard);
+      console.log("Scarta carta all'indice:", cardIndex);
       socket.emit('discardCard', cardIndex);
     }
 
@@ -580,35 +605,50 @@
       const input = document.getElementById('chat-input');
       const message = input.value.trim();
       if (message) {
+        console.log("Invio messaggio chat:", message);
         socket.emit('chatMessage', message);
         input.value = '';
       }
     }
 
     // Event listeners Socket.IO
-    socket.on('gameCreated', ({ gameId: newGameId, players }) => {
+    socket.on('connect', () => {
+      console.log("Connesso al server con ID:", socket.id);
+      showNotification("Connesso al server");
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error("Errore di connessione:", error);
+      showNotification("Errore di connessione al server");
+    });
+
+    socket.on('gameCreated', ({ gameId: newGameId, players: playersList }) => {
+      console.log("Partita creata:", newGameId, playersList);
       gameId = newGameId;
       isHost = true;
       document.getElementById('game-container').classList.remove('hidden');
       document.getElementById('lobby').classList.add('hidden');
       document.getElementById('startBtn').classList.remove('hidden');
       showNotification(`Partita creata! ID: ${gameId}`);
-      updatePlayerList(players);
+      updatePlayerList(playersList);
     });
 
-    socket.on('playerJoined', ({ players }) => {
-      updatePlayerList(players);
+    socket.on('playerJoined', ({ players: playersList }) => {
+      console.log("Giocatore unito:", playersList);
+      updatePlayerList(playersList);
       showNotification('Un nuovo giocatore si è unito alla partita');
     });
 
-    socket.on('gameStarted', ({ players, currentTurn: newCurrentTurn }) => {
+    socket.on('gameStarted', ({ players: playersList, currentTurn: newCurrentTurn }) => {
+      console.log("Partita avviata:", playersList, "turno di:", newCurrentTurn);
       currentTurn = newCurrentTurn;
       document.getElementById('startBtn').classList.add('hidden');
-      document.getElementById('status').textContent = `Turno di ${players.find(p => p.id === currentTurn)?.name}`;
-      updatePlayerList(players);
+      document.getElementById('status').textContent = `Turno di ${playersList.find(p => p.id === currentTurn)?.name}`;
+      updatePlayerList(playersList);
     });
 
     socket.on('cardDrawn', ({ playerId, currentTurn: newCurrentTurn }) => {
+      console.log("Carta pescata da:", playerId, "nuovo turno:", newCurrentTurn);
       currentTurn = newCurrentTurn;
       const player = document.querySelector(`.player[data-id="${playerId}"]`);
       if (player) {
@@ -621,6 +661,7 @@
     });
 
     socket.on('cardDiscarded', ({ playerId, cardIndex, currentTurn: newCurrentTurn }) => {
+      console.log("Carta scartata da:", playerId, "indice:", cardIndex, "nuovo turno:", newCurrentTurn);
       currentTurn = newCurrentTurn;
       const player = document.querySelector(`.player[data-id="${playerId}"]`);
       if (player) {
@@ -636,15 +677,18 @@
     });
 
     socket.on('chatMessage', ({ playerName, message }) => {
+      console.log("Messaggio chat da:", playerName, ":", message);
       addChatMessage(message, playerName);
     });
 
-    socket.on('playerLeft', ({ playerId, players }) => {
-      updatePlayerList(players);
+    socket.on('playerLeft', ({ playerId, players: playersList }) => {
+      console.log("Giocatore uscito:", playerId, "giocatori rimanenti:", playersList);
+      updatePlayerList(playersList);
       showNotification('Un giocatore ha lasciato la partita');
     });
 
     socket.on('error', (message) => {
+      console.error("Errore dal server:", message);
       showNotification(message);
     });
 
