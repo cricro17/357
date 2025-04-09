@@ -1,4 +1,4 @@
-const socket = io("http://127.0.0.1:3001");
+const socket = io("https://three57-jtxj.onrender.com");
 
 let playerHand = [];
 let selectedIndexes = [];
