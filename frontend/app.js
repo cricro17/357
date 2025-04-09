@@ -28,6 +28,7 @@ function renderHand(highlightCard = null) {
   handDiv.innerHTML = '';
   playerHand.forEach((card, index) => {
     const btn = document.createElement('button');
+    btn.className = `card ${card.suit}`; // Aggiunge classe card e seme (♥ ♠ ♣ ♦)
     btn.innerText = `${card.value}${card.suit}`;
     btn.onclick = () => toggleCardSelection(index, btn);
 
@@ -125,14 +126,23 @@ socket.on('cardDiscarded', (cards) => {
   updateButtons();
 });
 
-socket.on('cardDiscardedByOther', ({ playerId, cards }) => {
-  const area = document.getElementById('discardedArea');
-  const div = document.createElement('div');
+socket.on('cardDiscardedByOther', ({ playerId, cards, playerIndex, localIndex }) => {
+  const relativeIndex = (playerIndex - localIndex + 4) % 4;
+  let areaId;
 
-  div.className = 'discard-msg';
-  div.innerText = `Giocatore ${playerId.slice(0, 4)} ha scartato: ` + cards.map(c => `${c.value}${c.suit}`).join(', ');
+  if (relativeIndex === 1) areaId = 'right-discard';
+  else if (relativeIndex === 2) areaId = 'top-discard';
+  else if (relativeIndex === 3) areaId = 'left-discard';
+  else return; // non mostrare se sono io
+
+  const area = document.getElementById(areaId);
+  if (!area) return;
+
+  const div = document.createElement('div');
+  div.innerText = cards.map(c => `${c.value}${c.suit}`).join(' ');
   area.appendChild(div);
 });
+
 
 
 socket.on('canAutoDiscard', (card) => {
