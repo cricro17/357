@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Pai Kang Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Pai Kang Online 🎴</h1>
+  <button id="create">Crea partita</button>
+  <select id="maxPlayers">
+    <option value="3">3 giocatori</option>
+    <option value="4">4 giocatori</option>
+  </select>
+  
+  <input type="text" id="roomCode" placeholder="Codice stanza">
+  <button id="join">Entra nella partita</button>
+
+  <p id="status"></p>
+
+  <hr>
+
+<h2>Le tue carte:</h2>
+<div id="hand" style="margin-bottom: 20px;"></div>
+
+<div id="actions" style="display: none;">
+  <button id="drawBtn">Pesca</button>
+  <button id="discardBtn">Scarta</button>
+  <button id="autoDiscardBtn" style="display: none;">Scarta Subito</button>
+  <button id="kangBtn">Kang</button>
+  
+</div>
+
+<p id="turnInfo"></p>
+
+
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
