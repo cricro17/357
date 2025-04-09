@@ -156,11 +156,20 @@ socket.on('cardDiscardedByOther', ({ playerIndex, cards }) => {
   const area = document.getElementById(`discard-${position}`);
   if (!area) return;
 
-  const div = document.createElement('div');
-  div.className = 'card';
-  div.innerText = cards.map(c => `${c.value}${c.suit}`).join(' ');
-  area.appendChild(div);
+  // Limita a 5 carte max visualizzate
+  cards.forEach(card => {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = `card ${card.suit}`;
+    cardDiv.innerText = `${card.value}${card.suit}`;
+    area.appendChild(cardDiv);
+  });
+
+  // Se superiamo le 5, rimuoviamo le prime
+  while (area.children.length > 5) {
+    area.removeChild(area.firstChild);
+  }
 });
+
 
 socket.on('canAutoDiscard', (card) => {
   isMyTurn = true;
