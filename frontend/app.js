@@ -12,22 +12,17 @@ const discardMap = ["bottom", "right", "top", "left"];
 // Eventi di creazione o join
 
 document.getElementById('create').onclick = () => {
-  const maxPlayers = parseInt(document.getElementById('maxPlayers').value);
-  socket.emit('createRoom', maxPlayers, (roomCode) => {
-    document.getElementById('status').innerText = `Partita creata! Codice stanza: ${roomCode}`;
-  });
+  const playerName = document.getElementById('player-name').value;
+  socket.emit('createGame', playerName);
 };
 
 document.getElementById('join').onclick = () => {
-  const roomCode = document.getElementById('roomCode').value;
-  socket.emit('joinRoom', roomCode, (response) => {
-    if (response.status === 'ok') {
-      document.getElementById('status').innerText = `Sei entrato nella stanza ${roomCode}`;
-    } else {
-      document.getElementById('status').innerText = response.message;
-    }
-  });
+  const roomCode = document.getElementById('game-id').value;
+  const playerName = document.getElementById('player-name').value;
+  socket.emit('joinGame', { gameId: roomCode, playerName });
 };
+
+
 
 // Rende la mano dell'utente
 function renderHand(highlightCard = null) {
