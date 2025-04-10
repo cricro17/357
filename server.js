@@ -136,10 +136,16 @@ io.on('connection', (socket) => {
     game.addPlayer(socket.id, playerName);
     games.set(gameId, game);
     players.set(socket.id, { gameId, playerName });
-    
+  
+    console.log(`[${socket.id}] ha creato una stanza come ${playerName}`);
+  
     socket.join(gameId);
-    socket.emit('gameCreated', { gameId, players: Array.from(game.players.values()) });
+    socket.emit('gameCreated', {
+      gameId,
+      players: Array.from(game.players.values())
+    });
   });
+  
 
   // Unirsi a una partita esistente
   socket.on('joinGame', ({ gameId, playerName }) => {
