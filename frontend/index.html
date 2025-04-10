@@ -477,15 +477,13 @@
   <div class="notifications" id="notifications"></div>
 
   <script>
-    // Inizializzazione Socket.IO con gestione degli errori
-    let socket;
-    try {
-      socket = io();
-      console.log("Socket.IO inizializzato");
-    } catch (error) {
-      console.error("Errore nell'inizializzazione di Socket.IO:", error);
-      showNotification("Errore di connessione al server. Ricarica la pagina.");
-    }
+    // Inizializza Socket.IO
+    const socket = io('https://three57-frontend.onrender.com');
+
+    socket.on('connect', () => {
+      console.log("Connesso al server con ID:", socket.id);
+      showNotification("Connesso al server");
+    });
 
     let gameId = null;
     let playerName = null;
@@ -495,7 +493,6 @@
 
     // Funzioni di utilità
     function showNotification(message) {
-      console.log("Notifica:", message);
       const notifications = document.getElementById('notifications');
       const notification = document.createElement('div');
       notification.className = 'notification';
@@ -547,17 +544,13 @@
 
     // Funzioni di gioco
     function createGame() {
-      playerName = document.getElementById('player-name').value.trim();
+      const playerName = document.getElementById('player-name').value.trim();
       if (!playerName) {
         showNotification('Inserisci il tuo nome');
         return;
       }
       console.log("Creazione partita con nome:", playerName);
-      if (socket) {
-        socket.emit('createGame', playerName);
-      } else {
-        showNotification('Errore di connessione. Ricarica la pagina.');
-      }
+      socket.emit('createGame', playerName);
     }
 
     function joinGame() {
@@ -568,20 +561,12 @@
         return;
       }
       console.log("Unione alla partita:", gameId, "con nome:", playerName);
-      if (socket) {
-        socket.emit('joinGame', { gameId, playerName });
-      } else {
-        showNotification('Errore di connessione. Ricarica la pagina.');
-      }
+      socket.emit('joinGame', { gameId, playerName });
     }
 
     function startGame() {
       console.log("Avvio partita");
-      if (socket) {
-        socket.emit('startGame');
-      } else {
-        showNotification('Errore di connessione. Ricarica la pagina.');
-      }
+      socket.emit('startGame');
     }
 
     function drawCard() {
@@ -590,11 +575,7 @@
         return;
       }
       console.log("Pesca carta");
-      if (socket) {
-        socket.emit('drawCard');
-      } else {
-        showNotification('Errore di connessione. Ricarica la pagina.');
-      }
+      socket.emit('drawCard');
     }
 
     function discardCard() {
@@ -609,11 +590,7 @@
       }
       const cardIndex = Array.from(selectedCard.parentElement.children).indexOf(selectedCard);
       console.log("Scarta carta all'indice:", cardIndex);
-      if (socket) {
-        socket.emit('discardCard', cardIndex);
-      } else {
-        showNotification('Errore di connessione. Ricarica la pagina.');
-      }
+      socket.emit('discardCard', cardIndex);
     }
 
     function kang() {
@@ -626,20 +603,11 @@
       const message = input.value.trim();
       if (message) {
         console.log("Invio messaggio chat:", message);
-        if (socket) {
-          socket.emit('chatMessage', message);
-          input.value = '';
-        } else {
-          showNotification('Errore di connessione. Ricarica la pagina.');
-        }
+        socket.emit('chatMessage', message);
+        input.value = '';
       }
     }
 
-    // Event listeners Socket.IO
-    socket.on('connect', () => {
-      console.log("Connesso al server con ID:", socket.id);
-      showNotification("Connesso al server");
-    });
 
     socket.on('connect_error', (error) => {
       console.error("Errore di connessione:", error);

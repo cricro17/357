@@ -4,19 +4,23 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin: '*', // Permetti tutte le origini o specifica il tuo dominio
+    methods: ['GET', 'POST']
   }
 });
 
-app.use(cors());
 app.use(express.json());
 app.use(express.static('frontend'));
+
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile('favicon.ico', { root: path.join(__dirname, 'frontend') });
+});
 
 // Struttura dati per memorizzare le partite
 const games = new Map();
