@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pai Kang Online</title>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script src="app.js"></script>
   <style>
     :root {
       --primary-color: #1b5e20;
@@ -382,14 +381,14 @@
   <!-- Lobby -->
   <div id="lobby" class="lobby">
     <h2>Benvenuto a Pai Kang Online</h2>
-    <div id="create-game">
-      <input type="text" id="player-name" placeholder="Il tuo nome">
-      <button onclick="createGame()">Crea Partita</button>
-    </div>
-    <div id="join-game">
-      <input type="text" id="game-id" placeholder="ID Partita">
-      <button onclick="joinGame()">Unisciti</button>
-    </div>
+    div id="create-game">
+    <input type="text" id="player-name" placeholder="Il tuo nome">
+    <button id="create">Crea Partita</button>
+  </div>
+
+  <div id="join-game">
+    <input type="text" id="game-id" placeholder="ID Partita">
+    <button id="join">Unisciti</button>
   </div>
 
   <!-- Game Container -->
@@ -715,5 +714,6 @@
       }
     });
   </script>
+  <script src="app.js"></script>
 </body>
 </html>
