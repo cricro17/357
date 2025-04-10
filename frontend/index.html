@@ -480,6 +480,7 @@
     // Inizializza Socket.IO
     const socket = io('https://three57-frontend.onrender.com');
 
+    // Assicurati che l'inizializzazione avvenga prima di usare `socket`
     socket.on('connect', () => {
       console.log("Connesso al server con ID:", socket.id);
       showNotification("Connesso al server");
@@ -544,13 +545,26 @@
 
     // Funzioni di gioco
     function createGame() {
-      const playerName = document.getElementById('player-name').value.trim();
+      playerName = document.getElementById('player-name').value.trim();
       if (!playerName) {
         showNotification('Inserisci il tuo nome');
         return;
       }
       console.log("Creazione partita con nome:", playerName);
-      socket.emit('createGame', playerName);
+      socket.emit('createGame', playerName, (response) => {
+        if (response.error) {
+          showNotification('Errore nella creazione della partita: ' + response.error);
+        } else {
+          console.log("Partita creata con successo:", response);
+          gameId = response.gameId;
+          isHost = true;
+          document.getElementById('game-container').classList.remove('hidden');
+          document.getElementById('lobby').classList.add('hidden');
+          document.getElementById('startBtn').classList.remove('hidden');
+          showNotification(`Partita creata! ID: ${gameId}`);
+          updatePlayerList(response.players);
+        }
+      });
     }
 
     function joinGame() {
