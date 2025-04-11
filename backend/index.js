@@ -95,3 +95,11 @@ io.on('connection', (socket) => {
     console.log(`❌ [${playerId}] disconnesso dalla stanza ${gameId}`);
   });
 });
+
+const path = require('path');
+
+app.use(express.static(path.join(__dirname, 'public'))); // <-- cambia 'public' se hai i file HTML in un'altra cartella
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html')); // <-- modifica se il file è altrove
+});
