@@ -46,6 +46,12 @@ io.on('connection', (socket) => {
     console.log(`[{playerId}] ha creato la stanza {gameId} come {playerName}`);
   });
 
+  socket.emit('gameCreated', {
+    gameId,
+    players: games[gameId].players
+  });
+  
+
   socket.on('joinGame', ({ gameId, playerName }) => {
     const playerId = socket.id;
     const game = games[gameId];
@@ -96,3 +102,53 @@ io.on('connection', (socket) => {
     console.log(`❌ [{playerId}] disconnesso dalla stanza {gameId}`);
   });
 });
+
+  socket.on('joinGame', ({ gameId, playerName }) => {
+    const playerId = socket.id;
+    const game = games[gameId];
+    if (!game || game.started || !playerName) return;
+
+    game.players.push({ id: playerId, name: playerName });
+    players[playerId] = gameId;
+    socket.join(gameId);
+
+    console.log(`[{playerId}] si è unito a {gameId} come {playerName}`);
+  });
+
+  socket.on('startGame', () => {
+    const playerId = socket.id;
+    const gameId = players[playerId];
+    const game = games[gameId];
+
+    if (!game || game.host !== playerId || game.started) return;
+
+    const deck = createDeck();
+    shuffle(deck);
+
+    game.started = true;
+    game.deck = [...deck];
+
+    game.players.forEach((player, index) => {
+      const hand = dealHand(game.deck);
+      const special = evaluateHand(hand);
+      io.to(player.id).emit('initialHand', {
+        hand,
+        special,
+        playerIndex: index,
+        totalPlayers: game.players.length,
+        allPlayers: game.players.map(p => p.id)
+      });
+    });
+
+    console.log(`🎲 La partita {gameId} è iniziata con {game.players.length} giocatori`);
+  });
+
+  socket.on('disconnect', () => {
+    const playerId = socket.id;
+    const gameId = players[playerId];
+    if (!gameId || !games[gameId]) return;
+
+    games[gameId].players = games[gameId].players.filter(p => p.id !== playerId);
+    delete players[playerId];
+    console.log(`❌ [{playerId}] disconnesso dalla stanza {gameId}`);
+  });
