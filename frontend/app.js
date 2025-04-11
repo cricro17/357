@@ -124,6 +124,13 @@ socket.on('initialHand', ({ hand, special, playerIndex, totalPlayers, allPlayers
   startWrapper.classList.add("hidden"); // Nascondi startGame
 });
 
+socket.on('gameCreated', ({ gameId, players }) => {
+  console.log("✅ Stanza creata:", gameId, players);
+  document.getElementById('game-id').value = gameId;
+  document.getElementById('start-wrapper').classList.remove('hidden');
+});
+
+
 socket.on('yourTurn', () => {
   isMyTurn = true;
   currentPhase = 'draw';
