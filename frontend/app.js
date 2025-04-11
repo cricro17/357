@@ -1,5 +1,5 @@
 const socket = io("https://three57-frontend.onrender.com", {
-  transports: ['websocket', 'polling'],
+  transports: ['polling'],
   reconnection: true,
   reconnectionAttempts: 5,
   reconnectionDelay: 1000
@@ -14,6 +14,11 @@ let localPlayerIndex = null;
 const discardMap = ["bottom", "right", "top", "left"];
 const startBtn = document.getElementById("startBtn");
 const startWrapper = document.getElementById("start-wrapper");
+
+socket.on('connect_error', (error) => {
+  console.error('Errore di connessione:', error);
+  document.getElementById('status').innerText = 'Errore di connessione al server...';
+});
 
 // === GESTIONE LOBBY ===
 document.getElementById('create').onclick = () => {
