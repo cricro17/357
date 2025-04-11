@@ -1,4 +1,4 @@
-const socket = io("https://three57-jtxj.onrender.com");
+const socket = io("https://three57-frontend.onrender.com");
 
 let playerHand = [];
 let selectedIndexes = [];
@@ -123,8 +123,6 @@ socket.on('playerJoined', ({ players }) => {
     if (el) el.textContent = player.name;
   });
 });
-
-
 
 socket.on('initialHand', ({ hand, special, playerIndex, totalPlayers, allPlayers }) => {
   playerHand = hand;
