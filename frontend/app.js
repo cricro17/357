@@ -1,5 +1,5 @@
-const socket = io("https://three57-jtxj.onrender.com");
 
+const socket = io("https://three57-jtxj.onrender.com");
 let playerHand = [];
 let selectedIndexes = [];
 let currentPhase = null;
@@ -10,7 +10,6 @@ const discardMap = ["bottom", "right", "top", "left"];
 const startBtn = document.getElementById("startBtn");
 const startWrapper = document.getElementById("start-wrapper");
 
-// === GESTIONE LOBBY ===
 document.getElementById('create').onclick = () => {
   const playerName = document.getElementById('player-name').value.trim();
   if (!playerName) return alert("Inserisci il tuo nome");
@@ -24,28 +23,22 @@ document.getElementById('join').onclick = () => {
   socket.emit('joinGame', { gameId: roomCode, playerName });
 };
 
-startBtn.onclick = () => {
-  socket.emit('startGame');
-};
+startBtn.onclick = () => socket.emit('startGame');
 
-// === GESTIONE MANO ===
 function renderHand(highlightCard = null) {
   const handDiv = document.getElementById('hand');
   handDiv.innerHTML = '';
-
   playerHand.forEach((card, index) => {
     const btn = document.createElement('button');
     btn.className = `card ${card.suit}`;
     btn.innerText = `${card.value}${card.suit}`;
     btn.onclick = () => toggleCardSelection(index, btn);
-
     if (selectedIndexes.includes(index)) btn.style.backgroundColor = 'orange';
     if (highlightCard && card.value === highlightCard.value) {
       btn.style.border = '3px solid red';
       btn.style.backgroundColor = '#ffdada';
       selectedIndexes = [index];
     }
-
     handDiv.appendChild(btn);
   });
 }
@@ -65,7 +58,6 @@ function renderBacks(playerId, index, total) {
   const pos = discardMap[relative];
   const handDiv = document.getElementById(`${pos}-hand`);
   if (!handDiv || playerId === socket.id) return;
-
   handDiv.innerHTML = '';
   for (let i = 0; i < 5; i++) {
     const back = document.createElement('div');
@@ -74,42 +66,24 @@ function renderBacks(playerId, index, total) {
   }
 }
 
-// === BOTTONI AZIONE ===
-document.getElementById('drawBtn').onclick = () => {
-  socket.emit('drawCard');
-};
-
+document.getElementById('drawBtn').onclick = () => socket.emit('drawCard');
 document.getElementById('discardBtn').onclick = () => {
-  if (selectedIndexes.length === 0 || selectedIndexes.length > 2) {
-    alert('Puoi scartare solo una o due carte uguali.');
-    return;
-  }
-
+  if (selectedIndexes.length === 0 || selectedIndexes.length > 2) return alert('Puoi scartare solo una o due carte uguali.');
   const selectedCards = selectedIndexes.map(i => playerHand[i]);
   const same = selectedCards.every(c => c.value === selectedCards[0].value);
-  if (!same) {
-    alert('Puoi scartare solo carte identiche.');
-    return;
-  }
-
+  if (!same) return alert('Puoi scartare solo carte identiche.');
   socket.emit('discardCard', selectedCards);
   selectedIndexes = [];
   document.getElementById('actions').style.display = 'none';
 };
+document.getElementById('kangBtn').onclick = () => socket.emit('kang');
 
-document.getElementById('kangBtn').onclick = () => {
-  socket.emit('kang');
-};
-
-// === SOCKET EVENTS ===
 socket.on('gameCreated', ({ gameId, players }) => {
-  console.log("✅ Stanza creata:", gameId);
   document.getElementById('game-id').value = gameId;
-  startWrapper.classList.remove('hidden');
+  document.getElementById('start-wrapper').classList.remove('hidden');
 });
 
 socket.on('playerJoined', ({ players }) => {
-  console.log("👥 Giocatori nella stanza:", players);
   if (!document.getElementById('lobby').classList.contains('hidden')) {
     document.getElementById('lobby').classList.add('hidden');
     document.getElementById('game').classList.remove('hidden');
@@ -121,19 +95,11 @@ socket.on('initialHand', ({ hand, special, playerIndex, totalPlayers, allPlayers
   playerHand = hand;
   renderHand();
   localPlayerIndex = playerIndex;
-
   allPlayers.forEach((pid, i) => renderBacks(pid, i, totalPlayers));
-
   document.getElementById('lobby').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
-
   const status = document.getElementById('status');
-  if (special) {
-    status.innerText = `✨ Combinazione: ${special.combination} (x${special.multiplier})`;
-  } else {
-    status.innerText = "🃏 Nessuna combinazione speciale";
-  }
-
+  status.innerText = special ? `✨ Combinazione: ${special.combination} (x${special.multiplier})` : "🃏 Nessuna combinazione speciale";
   startWrapper.classList.add("hidden");
 });
 
@@ -174,9 +140,7 @@ socket.on('notYourTurn', () => {
 });
 
 socket.on('gameEnded', ({ winner, reason }) => {
-  const msg = winner === socket.id
-    ? `🏆 Hai vinto! ${reason}`
-    : `💀 ${reason}`;
+  const msg = winner === socket.id ? `🏆 Hai vinto! ${reason}` : `💀 ${reason}`;
   document.getElementById('status').innerText = msg;
   document.getElementById('actions').style.display = 'none';
 });

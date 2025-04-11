@@ -1,3 +1,4 @@
+
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -7,11 +8,7 @@ const { createDeck, shuffle, dealHand, evaluateHand } = require('./game');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" }
-});
-
-app.use(cors());
+const io = new Server(server, { cors: { origin: "*" } });
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
@@ -25,10 +22,9 @@ io.on('connection', (socket) => {
   console.log(`✅ [${socket.id}] connected`);
 
   socket.on('createGame', (playerName) => {
-    if (!playerName) return;
-
     const gameId = uuidv4();
     const playerId = socket.id;
+    if (!playerName) return;
 
     games[gameId] = {
       id: gameId,
@@ -49,13 +45,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('joinGame', ({ gameId, playerName }) => {
-    const game = games[gameId];
     const playerId = socket.id;
-
-    if (!game || game.started || !playerName) {
-      console.log(`❌ Join fallito per ${playerId}`);
-      return;
-    }
+    const game = games[gameId];
+    if (!game || game.started || !playerName) return;
 
     game.players.push({ id: playerId, name: playerName });
     players[playerId] = gameId;
@@ -66,30 +58,16 @@ io.on('connection', (socket) => {
     io.in(gameId).emit('playerJoined', {
       players: game.players
     });
-
-    if (game.started) {
-      const hand = dealHand(game.deck);
-      const special = evaluateHand(hand);
-      socket.emit('initialHand', {
-        hand,
-        special,
-        playerIndex: game.players.length - 1,
-        totalPlayers: game.players.length,
-        allPlayers: game.players.map(p => p.id)
-      });
-    }
   });
 
   socket.on('startGame', () => {
     const playerId = socket.id;
     const gameId = players[playerId];
     const game = games[gameId];
-
     if (!game || game.host !== playerId || game.started) return;
 
     const deck = createDeck();
     shuffle(deck);
-
     game.started = true;
     game.deck = [...deck];
 
@@ -112,7 +90,6 @@ io.on('connection', (socket) => {
     const playerId = socket.id;
     const gameId = players[playerId];
     if (!gameId || !games[gameId]) return;
-
     games[gameId].players = games[gameId].players.filter(p => p.id !== playerId);
     delete players[playerId];
     console.log(`❌ [${playerId}] disconnesso dalla stanza ${gameId}`);
