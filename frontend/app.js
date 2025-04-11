@@ -1,4 +1,4 @@
-const socket = io("https://three57-frontend.onrender.com", {
+const socket = io("https://three57-jtxj.onrender.com", {
   path: '/socket.io'
 });
 
