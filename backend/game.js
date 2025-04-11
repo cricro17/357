@@ -1,4 +1,3 @@
-
 function createDeck() {
   const suits = ['♠', '♥', '♦', '♣'];
   const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
@@ -33,46 +32,18 @@ function evaluateHand(hand) {
   }
 
   const isSameSuit = suitsOnly.every(s => s === suitsOnly[0]);
-
   const valueOrder = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-  const sortedIndexes = valuesOnly
-    .map(v => valueOrder.indexOf(v))
-    .sort((a, b) => a - b);
-
+  const sortedIndexes = valuesOnly.map(v => valueOrder.indexOf(v)).sort((a, b) => a - b);
   const isSequence = sortedIndexes.every((v, i, arr) => i === 0 || v === arr[i - 1] + 1);
 
-  // Combinazioni speciali (ordine di priorità)
-  if (valuesOnly.every(v => ['3', '5', '8'].includes(v))) {
-    return { combination: '358', multiplier: 16 };
-  }
-
-  if (isSequence && isSameSuit && valuesOnly.includes('10') && valuesOnly.includes('A')) {
-    return { combination: 'Scala Reale', multiplier: 15 };
-  }
-
-  if (isSequence && isSameSuit) {
-    return { combination: 'Scala Colore', multiplier: 10 };
-  }
-
-  if (Object.values(valueCount).includes(4)) {
-    return { combination: 'Poker', multiplier: 10 };
-  }
-
-  if (isSameSuit) {
-    return { combination: 'Colore', multiplier: 5 };
-  }
-
-  if (isSequence) {
-    return { combination: 'Scala', multiplier: 5 };
-  }
-
-  if (valuesOnly.every(v => ['A', 'K', 'Q', 'J', '10'].includes(v))) {
-    return { combination: '50', multiplier: 5 };
-  }
-
-  if (Object.values(valueCount).includes(3)) {
-    return { combination: 'Tris', multiplier: 3 };
-  }
+  if (valuesOnly.every(v => ['3', '5', '8'].includes(v))) return { combination: '358', multiplier: 16 };
+  if (isSequence && isSameSuit && valuesOnly.includes('10') && valuesOnly.includes('A')) return { combination: 'Scala Reale', multiplier: 15 };
+  if (isSequence && isSameSuit) return { combination: 'Scala Colore', multiplier: 10 };
+  if (Object.values(valueCount).includes(4)) return { combination: 'Poker', multiplier: 10 };
+  if (isSameSuit) return { combination: 'Colore', multiplier: 5 };
+  if (isSequence) return { combination: 'Scala', multiplier: 5 };
+  if (valuesOnly.every(v => ['A', 'K', 'Q', 'J', '10'].includes(v))) return { combination: '50', multiplier: 5 };
+  if (Object.values(valueCount).includes(3)) return { combination: 'Tris', multiplier: 3 };
 
   return null;
 }

@@ -7,12 +7,7 @@ const { createDeck, shuffle, dealHand, evaluateHand } = require('./game');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*"
-  }
-});
-
+const io = new Server(server, { cors: { origin: "*" } });
 app.use(cors());
 
 const PORT = process.env.PORT || 3001;
@@ -29,7 +24,6 @@ io.on('connection', (socket) => {
   socket.on('createGame', (playerName) => {
     const gameId = uuidv4();
     const playerId = socket.id;
-
     if (!playerName) return;
 
     games[gameId] = {
@@ -53,20 +47,38 @@ io.on('connection', (socket) => {
   socket.on('joinGame', ({ gameId, playerName }) => {
     const playerId = socket.id;
     const game = games[gameId];
-    if (!game || game.started || !playerName) return;
+    if (!game || game.started || !playerName) {
+      console.log(`❌ Join fallito: stanza ${gameId} non valida`);
+      return;
+    }
 
     game.players.push({ id: playerId, name: playerName });
     players[playerId] = gameId;
     socket.join(gameId);
 
     console.log(`[${playerId}] si è unito a ${gameId} come ${playerName}`);
+
+    io.in(gameId).emit('playerJoined', {
+      players: game.players
+    });
+
+    if (game.started) {
+      const hand = dealHand(game.deck);
+      const special = evaluateHand(hand);
+      socket.emit('initialHand', {
+        hand,
+        special,
+        playerIndex: game.players.length - 1,
+        totalPlayers: game.players.length,
+        allPlayers: game.players.map(p => p.id)
+      });
+    }
   });
 
   socket.on('startGame', () => {
     const playerId = socket.id;
     const gameId = players[playerId];
     const game = games[gameId];
-
     if (!game || game.host !== playerId || game.started) return;
 
     const deck = createDeck();
@@ -87,7 +99,7 @@ io.on('connection', (socket) => {
       });
     });
 
-    console.log(`🎲 La partita ${gameId} è iniziata con ${game.players.length} giocatori`);
+    console.log(`🎲 Partita ${gameId} avviata con ${game.players.length} giocatori`);
   });
 
   socket.on('disconnect', () => {
