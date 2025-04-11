@@ -111,8 +111,15 @@ socket.on('gameCreated', ({ gameId, players }) => {
 
 socket.on('playerJoined', ({ players }) => {
   console.log("👥 Giocatori nella stanza:", players);
+
+  if (!document.getElementById('lobby').classList.contains('hidden')) {
+    document.getElementById('lobby').classList.add('hidden');
+    document.getElementById('game').classList.remove('hidden');
+  }
+
   document.getElementById("status").innerText = `${players.length} giocatori collegati`;
 });
+
 
 socket.on('initialHand', ({ hand, special, playerIndex, totalPlayers, allPlayers }) => {
   playerHand = hand;
