@@ -124,6 +124,12 @@ socket.on('initialHand', ({ hand, special, playerIndex, totalPlayers, allPlayers
   startWrapper.classList.add("hidden"); // Nascondi startGame
 });
 
+socket.on('playerJoined', ({ players }) => {
+  console.log("👥 Giocatori nella stanza:", players);
+  document.getElementById("status").innerText = `${players.length} giocatori collegati`;
+});
+
+
 socket.on('gameCreated', ({ gameId, players }) => {
   console.log("✅ Stanza creata:", gameId, players);
   document.getElementById('game-id').value = gameId;
