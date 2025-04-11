@@ -1,8 +1,5 @@
 const socket = io("https://three57-frontend.onrender.com", {
-  transports: ['polling'],
-  reconnection: true,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000
+  path: '/socket.io'
 });
 
 let playerHand = [];
