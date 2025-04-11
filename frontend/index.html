@@ -30,9 +30,15 @@
 
   <!-- Game Container -->
   <div id="game-container" class="game-container hidden">
-    <!-- ... Tutta la struttura HTML della partita resta invariata ... -->
-    <!-- Pulsanti: drawBtn, discardBtn, kangBtn, startBtn -->
-    <!-- Chat: chat-messages, chat-input, send-chat -->
+    <!-- Controlli del gioco -->
+    <div class="controls">
+      <button id="drawBtn" onclick="drawCard()">Pesca</button>
+      <button id="discardBtn" onclick="discardCard()">Scarta</button>
+      <button id="autoDiscardBtn" class="hidden">Scarta Auto</button>
+      <button id="kangBtn" onclick="kang()">Kang</button>
+      <button id="startBtn" onclick="startGame()" class="hidden">Avvia Partita</button>
+    </div>
+    <!-- Altri contenuti della partita -->
   </div>
 
   <div class="notifications" id="notifications"></div>
