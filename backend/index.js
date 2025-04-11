@@ -1,44 +1,120 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const cors = require("cors");
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const { Server } = require('socket.io');
+const { v4: uuidv4 } = require('uuid');
+const { createDeck, shuffle, dealHand, evaluateHand } = require('./game');
 
 const app = express();
 const server = http.createServer(app);
-
-// Configurazione di Socket.IO con CORS
 const io = new Server(server, {
-  cors: {
-    origin: "https://three57-frontend.onrender.com", // URL del frontend
-    methods: ["GET", "POST"], // Metodi permessi
-  },
+  cors: { origin: "*" }
 });
 
-// Middleware per CORS
 app.use(cors());
 
-// Endpoint di base per il test del backend
-app.get("/", (req, res) => {
-  res.send("Server di backend attivo!");
-});
-
-// Gestione connessioni Socket.IO
-io.on("connection", (socket) => {
-  console.log("Nuovo client connesso:", socket.id);
-
-  // Eventi personalizzati
-  socket.on("message", (data) => {
-    console.log("Messaggio ricevuto:", data);
-    socket.broadcast.emit("message", data); // Invia il messaggio agli altri client
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnesso:", socket.id);
-  });
-});
-
-// Avvio del server
-const PORT = process.env.PORT || 3000; // Porta dinamica o 3000
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server in ascolto sulla porta ${PORT}`);
+  console.log(`🎮 Server listening on port ${PORT}`);
+});
+
+const games = {};
+const players = {};
+
+io.on('connection', (socket) => {
+  console.log(`✅ [${socket.id}] connected`);
+
+  socket.on('createGame', (playerName) => {
+    if (!playerName) return;
+
+    const gameId = uuidv4();
+    const playerId = socket.id;
+
+    games[gameId] = {
+      id: gameId,
+      players: [{ id: playerId, name: playerName }],
+      host: playerId,
+      started: false
+    };
+
+    players[playerId] = gameId;
+    socket.join(gameId);
+
+    console.log(`[${playerId}] ha creato la stanza ${gameId} come ${playerName}`);
+
+    socket.emit('gameCreated', {
+      gameId,
+      players: games[gameId].players
+    });
+  });
+
+  socket.on('joinGame', ({ gameId, playerName }) => {
+    const game = games[gameId];
+    const playerId = socket.id;
+
+    if (!game || game.started || !playerName) {
+      console.log(`❌ Join fallito per ${playerId}`);
+      return;
+    }
+
+    game.players.push({ id: playerId, name: playerName });
+    players[playerId] = gameId;
+    socket.join(gameId);
+
+    console.log(`[${playerId}] si è unito a ${gameId} come ${playerName}`);
+
+    io.in(gameId).emit('playerJoined', {
+      players: game.players
+    });
+
+    if (game.started) {
+      const hand = dealHand(game.deck);
+      const special = evaluateHand(hand);
+      socket.emit('initialHand', {
+        hand,
+        special,
+        playerIndex: game.players.length - 1,
+        totalPlayers: game.players.length,
+        allPlayers: game.players.map(p => p.id)
+      });
+    }
+  });
+
+  socket.on('startGame', () => {
+    const playerId = socket.id;
+    const gameId = players[playerId];
+    const game = games[gameId];
+
+    if (!game || game.host !== playerId || game.started) return;
+
+    const deck = createDeck();
+    shuffle(deck);
+
+    game.started = true;
+    game.deck = [...deck];
+
+    game.players.forEach((player, index) => {
+      const hand = dealHand(game.deck);
+      const special = evaluateHand(hand);
+      io.to(player.id).emit('initialHand', {
+        hand,
+        special,
+        playerIndex: index,
+        totalPlayers: game.players.length,
+        allPlayers: game.players.map(p => p.id)
+      });
+    });
+
+    console.log(`🎲 La partita ${gameId} è iniziata con ${game.players.length} giocatori`);
+  });
+
+  socket.on('disconnect', () => {
+    const playerId = socket.id;
+    const gameId = players[playerId];
+    if (!gameId || !games[gameId]) return;
+
+    games[gameId].players = games[gameId].players.filter(p => p.id !== playerId);
+    delete players[playerId];
+    console.log(`❌ [${playerId}] disconnesso dalla stanza ${gameId}`);
+  });
 });

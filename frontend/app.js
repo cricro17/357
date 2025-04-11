@@ -1,6 +1,4 @@
-const socket = io("https://three57-jtxj.onrender.com", {
-  path: '/socket.io'
-});
+const socket = io("https://three57-jtxj.onrender.com");
 
 let playerHand = [];
 let selectedIndexes = [];
@@ -11,11 +9,6 @@ let localPlayerIndex = null;
 const discardMap = ["bottom", "right", "top", "left"];
 const startBtn = document.getElementById("startBtn");
 const startWrapper = document.getElementById("start-wrapper");
-
-socket.on('connect_error', (error) => {
-  console.error('Errore di connessione:', error);
-  document.getElementById('status').innerText = 'Errore di connessione al server...';
-});
 
 // === GESTIONE LOBBY ===
 document.getElementById('create').onclick = () => {
@@ -31,7 +24,6 @@ document.getElementById('join').onclick = () => {
   socket.emit('joinGame', { gameId: roomCode, playerName });
 };
 
-// === START GAME ===
 startBtn.onclick = () => {
   socket.emit('startGame');
 };
@@ -113,22 +105,16 @@ document.getElementById('kangBtn').onclick = () => {
 socket.on('gameCreated', ({ gameId, players }) => {
   console.log("✅ Stanza creata:", gameId);
   document.getElementById('game-id').value = gameId;
-  document.getElementById('start-wrapper').classList.remove('hidden');
+  startWrapper.classList.remove('hidden');
 });
 
 socket.on('playerJoined', ({ players }) => {
   console.log("👥 Giocatori nella stanza:", players);
+  if (!document.getElementById('lobby').classList.contains('hidden')) {
+    document.getElementById('lobby').classList.add('hidden');
+    document.getElementById('game').classList.remove('hidden');
+  }
   document.getElementById("status").innerText = `${players.length} giocatori collegati`;
-
-  // Posizioni disponibili
-  const positions = ["bottom", "right", "top", "left"];
-
-  // Aggiorna nomi sui box tavolo
-  players.forEach((player, index) => {
-    const pos = positions[index];
-    const el = document.querySelector(`.player.${pos} .name`);
-    if (el) el.textContent = player.name;
-  });
 });
 
 socket.on('initialHand', ({ hand, special, playerIndex, totalPlayers, allPlayers }) => {
