@@ -1,4 +1,9 @@
-const socket = io("https://three57-frontend.onrender.com");
+const socket = io("https://three57-frontend.onrender.com", {
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000
+});
 
 let playerHand = [];
 let selectedIndexes = [];
