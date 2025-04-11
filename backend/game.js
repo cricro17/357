@@ -1,8 +1,7 @@
-const suits = ['♠', '♥', '♦', '♣'];
-const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
-// Genera il mazzo completo
 function createDeck() {
+  const suits = ['♠', '♥', '♦', '♣'];
+  const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
   const deck = [];
   for (const suit of suits) {
     for (const value of values) {
@@ -12,7 +11,6 @@ function createDeck() {
   return shuffle(deck);
 }
 
-// Mescola le carte
 function shuffle(deck) {
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -21,34 +19,27 @@ function shuffle(deck) {
   return deck;
 }
 
-// Distribuisce 5 carte per giocatore
-function dealHands(deck, numPlayers) {
-  const hands = [];
-  for (let i = 0; i < numPlayers; i++) {
-    hands.push(deck.splice(0, 5));
-  }
-  return hands;
+function dealHand(deck) {
+  return deck.splice(0, 5);
 }
 
-// Funzione principale per valutare la mano iniziale
 function evaluateHand(hand) {
-  const valuesOnly = hand.map(c => c.value);
-  const suitsOnly = hand.map(c => c.suit);
-
+  const valuesOnly = hand.map(card => card.value);
+  const suitsOnly = hand.map(card => card.suit);
   const valueCount = {};
-  const suitCount = {};
-  for (const v of valuesOnly) valueCount[v] = (valueCount[v] || 0) + 1;
-  for (const s of suitsOnly) suitCount[s] = (suitCount[s] || 0) + 1;
 
-  const uniqueValues = [...new Set(valuesOnly)];
-  const uniqueSuits = [...new Set(suitsOnly)];
+  for (const value of valuesOnly) {
+    valueCount[value] = (valueCount[value] || 0) + 1;
+  }
 
-  // Converti le carte in valori numerici per controllare scale
-  const valueOrder = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-  const numericValues = valuesOnly.map(v => valueOrder.indexOf(v)).sort((a, b) => a - b);
+  const isSameSuit = suitsOnly.every(s => s === suitsOnly[0]);
 
-  const isSequence = numericValues.every((v, i, arr) => i === 0 || v === arr[i - 1] + 1);
-  const isSameSuit = uniqueSuits.length === 1;
+  const valueOrder = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+  const sortedIndexes = valuesOnly
+    .map(v => valueOrder.indexOf(v))
+    .sort((a, b) => a - b);
+
+  const isSequence = sortedIndexes.every((v, i, arr) => i === 0 || v === arr[i - 1] + 1);
 
   // Combinazioni speciali (ordine di priorità)
   if (valuesOnly.every(v => ['3', '5', '8'].includes(v))) {
@@ -83,11 +74,12 @@ function evaluateHand(hand) {
     return { combination: 'Tris', multiplier: 3 };
   }
 
-  return null; // Nessuna combinazione speciale
+  return null;
 }
 
 module.exports = {
   createDeck,
-  dealHands,
+  shuffle,
+  dealHand,
   evaluateHand
 };
