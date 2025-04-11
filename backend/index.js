@@ -1,88 +1,98 @@
-// ✅ index.js - Nuovo backend Pai Kang
+
 const express = require('express');
-const cors = require('cors');
 const http = require('http');
+const cors = require('cors');
 const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
-const { createDeck, dealHands, evaluateHand } = require('./game');
+const { createDeck, shuffle, dealHand, evaluateHand } = require('./game');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
+});
+
 app.use(cors());
 
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+  console.log(`🎮 Server listening on port {PORT}`);
+});
 
-const rooms = {}; // roomId => { players: [{ id, name }], started: bool, hands: {}, specials: {} }
+const games = {};
+const players = {};
 
 io.on('connection', (socket) => {
-  console.log('🔌 Nuova connessione:', socket.id);
+  console.log(`✅ [{socket.id}] connected`);
 
-  socket.on('createGame', (playerName, callback) => {
-    const roomId = uuidv4().slice(0, 6);
-    rooms[roomId] = {
-      players: [{ id: socket.id, name: playerName }],
-      started: false,
-      hands: {},
-      specials: {}
+  socket.on('createGame', (playerName) => {
+    const gameId = uuidv4();
+    const playerId = socket.id;
+
+    if (!playerName) return;
+
+    games[gameId] = {
+      id: gameId,
+      players: [{ id: playerId, name: playerName }],
+      host: playerId,
+      started: false
     };
-    socket.join(roomId);
-    callback?.({ roomId });
-    console.log(`🎲 Stanza creata: ${roomId} da ${playerName}`);
+
+    players[playerId] = gameId;
+    socket.join(gameId);
+
+    console.log(`[{playerId}] ha creato la stanza {gameId} come {playerName}`);
   });
 
   socket.on('joinGame', ({ gameId, playerName }) => {
-    const room = rooms[gameId];
-    if (!room || room.started || room.players.find(p => p.id === socket.id)) return;
-    room.players.push({ id: socket.id, name: playerName });
+    const playerId = socket.id;
+    const game = games[gameId];
+    if (!game || game.started || !playerName) return;
+
+    game.players.push({ id: playerId, name: playerName });
+    players[playerId] = gameId;
     socket.join(gameId);
-    io.to(gameId).emit('playerJoined', { players: room.players });
-    console.log(`🙋 ${playerName} si unisce a ${gameId}`);
+
+    console.log(`[{playerId}] si è unito a {gameId} come {playerName}`);
   });
 
   socket.on('startGame', () => {
-    const roomId = findRoomByPlayer(socket.id);
-    if (!roomId) return;
-    const room = rooms[roomId];
-    if (room.started) return;
+    const playerId = socket.id;
+    const gameId = players[playerId];
+    const game = games[gameId];
+
+    if (!game || game.host !== playerId || game.started) return;
 
     const deck = createDeck();
-    const dealt = dealHands(deck, room.players.map(p => p.id));
-    const specials = {};
+    shuffle(deck);
 
-    for (const player of room.players) {
-      const hand = dealt[player.id];
+    game.started = true;
+    game.deck = [...deck];
+
+    game.players.forEach((player, index) => {
+      const hand = dealHand(game.deck);
       const special = evaluateHand(hand);
-      room.hands[player.id] = hand;
-      if (special) specials[player.id] = special;
-    }
-
-    room.started = true;
-    room.specials = specials;
-
-    for (const player of room.players) {
       io.to(player.id).emit('initialHand', {
-        hand: room.hands[player.id],
-        special: specials[player.id] || null,
-        playerIndex: room.players.findIndex(p => p.id === player.id),
-        totalPlayers: room.players.length,
-        allPlayers: room.players.map(p => p.id)
+        hand,
+        special,
+        playerIndex: index,
+        totalPlayers: game.players.length,
+        allPlayers: game.players.map(p => p.id)
       });
-    }
+    });
+
+    console.log(`🎲 La partita {gameId} è iniziata con {game.players.length} giocatori`);
   });
 
   socket.on('disconnect', () => {
-    const roomId = findRoomByPlayer(socket.id);
-    if (!roomId) return;
-    const room = rooms[roomId];
-    room.players = room.players.filter(p => p.id !== socket.id);
-    io.to(roomId).emit('playerLeft', { playerId: socket.id, players: room.players });
-    if (room.players.length === 0) delete rooms[roomId];
+    const playerId = socket.id;
+    const gameId = players[playerId];
+    if (!gameId || !games[gameId]) return;
+
+    games[gameId].players = games[gameId].players.filter(p => p.id !== playerId);
+    delete players[playerId];
+    console.log(`❌ [{playerId}] disconnesso dalla stanza {gameId}`);
   });
 });
-
-function findRoomByPlayer(socketId) {
-  return Object.entries(rooms).find(([_, room]) => room.players.some(p => p.id === socketId))?.[0];
-}
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 Server Pai Kang attivo sulla porta ${PORT}`));
