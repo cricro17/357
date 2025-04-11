@@ -7,7 +7,6 @@ let isMyTurn = false;
 let localPlayerIndex = null;
 
 const discardMap = ["bottom", "right", "top", "left"];
-
 const startBtn = document.getElementById("startBtn");
 const startWrapper = document.getElementById("start-wrapper");
 
@@ -104,6 +103,17 @@ document.getElementById('kangBtn').onclick = () => {
 };
 
 // === SOCKET EVENTS ===
+socket.on('gameCreated', ({ gameId, players }) => {
+  console.log("✅ Stanza creata:", gameId);
+  document.getElementById('game-id').value = gameId;
+  document.getElementById('start-wrapper').classList.remove('hidden');
+});
+
+socket.on('playerJoined', ({ players }) => {
+  console.log("👥 Giocatori nella stanza:", players);
+  document.getElementById("status").innerText = `${players.length} giocatori collegati`;
+});
+
 socket.on('initialHand', ({ hand, special, playerIndex, totalPlayers, allPlayers }) => {
   playerHand = hand;
   renderHand();
@@ -121,21 +131,8 @@ socket.on('initialHand', ({ hand, special, playerIndex, totalPlayers, allPlayers
     status.innerText = "🃏 Nessuna combinazione speciale";
   }
 
-  startWrapper.classList.add("hidden"); // Nascondi startGame
+  startWrapper.classList.add("hidden");
 });
-
-socket.on('playerJoined', ({ players }) => {
-  console.log("👥 Giocatori nella stanza:", players);
-  document.getElementById("status").innerText = `${players.length} giocatori collegati`;
-});
-
-
-socket.on('gameCreated', ({ gameId, players }) => {
-  console.log("✅ Stanza creata:", gameId, players);
-  document.getElementById('game-id').value = gameId;
-  document.getElementById('start-wrapper').classList.remove('hidden');
-});
-
 
 socket.on('yourTurn', () => {
   isMyTurn = true;
