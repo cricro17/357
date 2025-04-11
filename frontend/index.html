@@ -3,44 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pai Kang Online</title>
+  <title>358</title>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="app.js" defer></script>
-  <!-- Tutto il CSS viene mantenuto qui come da richiesta -->
-  <style>
-    /* ... (tutti gli stili CSS vengono mantenuti invariati) ... */
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>Pai Kang Online 🎴</h1>
+<body class="bg-green-900 text-white font-sans min-h-screen flex flex-col items-center justify-center p-4">
 
-  <!-- Lobby -->
-  <div id="lobby" class="lobby">
-    <h2>Benvenuto a Pai Kang Online</h2>
-    <div id="create-game">
-      <input type="text" id="player-name" placeholder="Il tuo nome">
-      <button id="create">Crea Partita</button>
-    </div>
-
-    <div id="join-game">
-      <input type="text" id="game-id" placeholder="ID Partita">
-      <button id="join">Unisciti</button>
+  <!-- LOBBY -->
+  <div id="lobby" class="flex flex-col items-center gap-4">
+    <h1 class="text-3xl font-bold">Pai Kang Online 🎴</h1>
+    <input id="player-name" placeholder="Il tuo nome" class="p-2 rounded text-black w-64" />
+    <input id="game-id" placeholder="ID stanza" class="p-2 rounded text-black w-64" />
+    <div class="flex gap-4">
+      <button id="create" class="bg-yellow-400 hover:bg-yellow-500 px-4 py-2 rounded font-bold">Crea</button>
+      <button id="join" class="bg-blue-400 hover:bg-blue-500 px-4 py-2 rounded font-bold">Unisciti</button>
     </div>
   </div>
 
-  <!-- Game Container -->
-  <div id="game-container" class="game-container hidden">
-    <!-- Controlli del gioco -->
-    <div class="controls">
-      <button id="drawBtn" onclick="drawCard()">Pesca</button>
-      <button id="discardBtn" onclick="discardCard()">Scarta</button>
-      <button id="autoDiscardBtn" class="hidden">Scarta Auto</button>
-      <button id="kangBtn" onclick="kang()">Kang</button>
-      <button id="startBtn" onclick="startGame()" class="hidden">Avvia Partita</button>
-    </div>
-    <!-- Altri contenuti della partita -->
-  </div>
+  <!-- GAME -->
+  <div id="game" class="hidden flex flex-col items-center gap-4 mt-6 w-full max-w-4xl">
 
-  <div class="notifications" id="notifications"></div>
+    <!-- Stato -->
+    <div id="status" class="text-lg bg-black/40 px-4 py-2 rounded">
+      In attesa dei giocatori...
+    </div>
+
+    <!-- Tavolo da gioco -->
+    <div class="relative w-full aspect-square max-w-4xl bg-green-700 rounded-full border-8 border-yellow-700 shadow-xl">
+
+      <!-- Giocatore in alto -->
+      <div class="absolute top-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+        <div class="name">Giocatore</div>
+        <div class="hand flex gap-1" id="top-hand"></div>
+        <div class="discard-pile flex gap-1 mt-1" id="discard-top"></div>
+      </div>
+
+      <!-- Giocatore a sinistra -->
+      <div class="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col items-center">
+        <div class="name">Giocatore</div>
+        <div class="hand flex flex-col gap-1" id="left-hand"></div>
+        <div class="discard-pile flex flex-col gap-1 mt-1" id="discard-left"></div>
+      </div>
+
+      <!-- Giocatore a destra -->
+      <div class="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col items-center">
+        <div class="name">Giocatore</div>
+        <div class="hand flex flex-col gap-1" id="right-hand"></div>
+        <div class="discard-pile flex flex-col gap-1 mt-1" id="discard-right"></div>
+      </div>
+
+      <!-- Giocatore (tu) in basso -->
+      <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+        <div class="name">Tu</div>
+        <div class="hand flex gap-1" id="bottom-hand"></div>
+        <div class="discard-pile flex gap-1 mt-1" id="discard-bottom"></div>
+      </div>
+    </div>
+
+    <!-- Mano personale -->
+    <div id="hand" class="flex gap-2 flex-wrap justify-center pt-4"></div>
+
+    <!-- Azioni -->
+    <div id="actions" class="hidden flex gap-3">
+      <button id="drawBtn" class="bg-yellow-500 px-4 py-2 rounded font-bold">Pesca</button>
+      <button id="discardBtn" class="bg-red-500 px-4 py-2 rounded font-bold">Scarta</button>
+      <button id="kangBtn" class="bg-purple-500 px-4 py-2 rounded font-bold">Kang</button>
+    </div>
+    <!-- Bottone start visibile solo all’host -->
+    <div id="start-wrapper" class="pt-4 hidden">
+    <button id="startBtn" class="bg-green-500 px-6 py-3 rounded-lg font-bold text-lg shadow-lg">
+    🎬 Avvia Partita
+    </button>
+    </div>
+  </div>
 </body>
 </html>

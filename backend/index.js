@@ -1,4 +1,4 @@
-// ✅ index.js - BACKEND COMPLETO
+// ✅ index.js - Nuovo backend Pai Kang
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -12,171 +12,77 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-const rooms = {};
+const rooms = {}; // roomId => { players: [{ id, name }], started: bool, hands: {}, specials: {} }
 
 io.on('connection', (socket) => {
-  console.log('✅ Connesso:', socket.id);
+  console.log('🔌 Nuova connessione:', socket.id);
 
-  socket.on('createRoom', (maxPlayers, callback) => {
-    const code = uuidv4().slice(0, 6);
-    rooms[code] = {
-      players: [socket.id],
-      maxPlayers,
+  socket.on('createGame', (playerName, callback) => {
+    const roomId = uuidv4().slice(0, 6);
+    rooms[roomId] = {
+      players: [{ id: socket.id, name: playerName }],
+      started: false,
+      hands: {},
+      specials: {}
     };
-    socket.join(code);
-    callback(code);
+    socket.join(roomId);
+    callback?.({ roomId });
+    console.log(`🎲 Stanza creata: ${roomId} da ${playerName}`);
   });
 
-  socket.on('joinRoom', (code, callback) => {
-    const room = rooms[code];
-    if (room && room.players.length < room.maxPlayers) {
-      room.players.push(socket.id);
-      socket.join(code);
-      callback({ status: 'ok' });
+  socket.on('joinGame', ({ gameId, playerName }) => {
+    const room = rooms[gameId];
+    if (!room || room.started || room.players.find(p => p.id === socket.id)) return;
+    room.players.push({ id: socket.id, name: playerName });
+    socket.join(gameId);
+    io.to(gameId).emit('playerJoined', { players: room.players });
+    console.log(`🙋 ${playerName} si unisce a ${gameId}`);
+  });
 
-      if (room.players.length === room.maxPlayers) {
-        startGame(code);
-      }
-    } else {
-      callback({ status: 'error', message: 'Errore nel join' });
+  socket.on('startGame', () => {
+    const roomId = findRoomByPlayer(socket.id);
+    if (!roomId) return;
+    const room = rooms[roomId];
+    if (room.started) return;
+
+    const deck = createDeck();
+    const dealt = dealHands(deck, room.players.map(p => p.id));
+    const specials = {};
+
+    for (const player of room.players) {
+      const hand = dealt[player.id];
+      const special = evaluateHand(hand);
+      room.hands[player.id] = hand;
+      if (special) specials[player.id] = special;
     }
-  });
 
-  socket.on('drawCard', () => {
-    const code = findPlayerRoom(socket.id);
-    const room = rooms[code];
-    if (!room || room.phase !== 'draw' || getCurrentPlayer(room) !== socket.id) return;
+    room.started = true;
+    room.specials = specials;
 
-    const card = room.deck.shift();
-    room.hands[socket.id].push(card);
-    room.phase = 'discard';
-    io.to(socket.id).emit('cardDrawn', card);
-  });
-
-  socket.on('discardCard', (cards) => {
-    const code = findPlayerRoom(socket.id);
-    const room = rooms[code];
-    if (!room || room.phase !== 'discard' || getCurrentPlayer(room) !== socket.id) return;
-
-    const hand = room.hands[socket.id];
-    const cardList = Array.isArray(cards) ? cards : [cards];
-
-    cardList.forEach(c => {
-      const i = hand.findIndex(h => h.value === c.value && h.suit === c.suit);
-      if (i !== -1) hand.splice(i, 1);
-    });
-
-    room.lastDiscarded = { value: cardList[0].value };
-    io.to(socket.id).emit('cardDiscarded', cardList);
-    room.players.forEach((pid, index) => {
-      if (pid !== socket.id) {
-        const currentPlayerIndex = room.players.indexOf(socket.id);
-        io.to(pid).emit('cardDiscardedByOther', {
-          playerId: socket.id,
-          cards,
-          playerIndex: currentPlayerIndex,
-          localIndex: index
-        });
-      }
-    });
-    
-    
-    room.turnIndex = (room.turnIndex + 1) % room.players.length;
-    const next = getCurrentPlayer(room);
-    const nextHand = room.hands[next];
-
-    room.phase = 'draw';
-    room.players.forEach(pid => io.to(pid).emit('notYourTurn'));
-
-    const match = nextHand.find(c => c.value === room.lastDiscarded.value);
-    if (match) {
-      room.phase = 'discard';
-      io.to(next).emit('canAutoDiscard', match);
-    } else {
-      io.to(next).emit('yourTurn');
-    }
-  });
-  socket.on('kang', () => {
-    const roomCode = findPlayerRoom(socket.id);
-    const room = rooms[roomCode];
-    if (!room || !room.hands) return;
-  
-    // Calcola i punteggi per ogni giocatore
-    const scores = room.players.map(pid => {
-      const hand = room.hands[pid];
-      return {
-        playerId: pid,
-        score: calculatePoints(hand)
-      };
-    });
-  
-    // Trova il punteggio minimo
-    const winner = scores.reduce((min, p) => p.score < min.score ? p : min, scores[0]);
-  
-    // Annuncia il vincitore a tutti
-    room.players.forEach(pid => {
-      io.to(pid).emit('gameEnded', {
-        winner: winner.playerId,
-        reason: `ha vinto con ${winner.score} punti!`
+    for (const player of room.players) {
+      io.to(player.id).emit('initialHand', {
+        hand: room.hands[player.id],
+        special: specials[player.id] || null,
+        playerIndex: room.players.findIndex(p => p.id === player.id),
+        totalPlayers: room.players.length,
+        allPlayers: room.players.map(p => p.id)
       });
-    });
+    }
+  });
+
+  socket.on('disconnect', () => {
+    const roomId = findRoomByPlayer(socket.id);
+    if (!roomId) return;
+    const room = rooms[roomId];
+    room.players = room.players.filter(p => p.id !== socket.id);
+    io.to(roomId).emit('playerLeft', { playerId: socket.id, players: room.players });
+    if (room.players.length === 0) delete rooms[roomId];
   });
 });
 
-function startGame(code) {
-  const room = rooms[code];
-  const deck = createDeck();
-  const hands = dealHands(deck, room.maxPlayers);
-
-  room.hands = {};
-  room.turnIndex = 0;
-  room.phase = 'draw';
-  room.deck = deck;
-  room.lastDiscarded = null;
-
-  let winner = false;
-
-  room.players.forEach((pid, i) => {
-    const hand = hands[i];
-    const result = evaluateHand(hand);
-    room.hands[pid] = hand;
-
-    io.to(pid).emit('initialHand', { hand, special: result });
-
-    if (result) {
-      room.players.forEach(p => {
-        io.to(p).emit('gameEnded', {
-          winner: pid,
-          reason: `ha una combinazione speciale: ${result.combination}`
-        });
-      });
-      winner = true;
-    }
-  });
-
-  if (!winner) {
-    io.to(getCurrentPlayer(room)).emit('yourTurn');
-  }
+function findRoomByPlayer(socketId) {
+  return Object.entries(rooms).find(([_, room]) => room.players.some(p => p.id === socketId))?.[0];
 }
 
-function getCurrentPlayer(room) {
-  return room.players[room.turnIndex];
-}
-
-function findPlayerRoom(id) {
-  return Object.keys(rooms).find(code => rooms[code].players.includes(id));
-}
-
-function calculatePoints(hand) {
-  const valueMap = {
-    A: 1, J: 11, Q: 12, K: 13
-  };
-  return hand.reduce((sum, card) => {
-    const val = isNaN(card.value) ? valueMap[card.value] || 0 : parseInt(card.value);
-    return sum + val;
-  }, 0);
-}
-
-
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => console.log(`🟢 Server online su porta ${PORT}`));
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`🚀 Server Pai Kang attivo sulla porta ${PORT}`));
